@@ -1,0 +1,297 @@
+.drive-permission-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+}
+
+.drive-permission-card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.icon-box {
+  background: #667eea;
+  width: 60px;
+  height: 60px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #1a202c;
+}
+
+.subtitle {
+  margin: 5px 0 0 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+/* User Info */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-details {
+  text-align: right;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #1a202c;
+  font-size: 14px;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #718096;
+}
+
+.user-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-login {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-login:hover:not(:disabled) {
+  background: #f7fafc;
+}
+
+.btn-logout {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.btn-logout:hover {
+  background: #fc8181;
+  color: white;
+}
+
+.btn-primary {
+  width: 100%;
+  background: #667eea;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #5a67d8;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Alerts */
+.alert {
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.alert strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.alert-error {
+  background: #fed7d7;
+  color: #c53030;
+  border: 2px solid #fc8181;
+}
+
+.alert-success {
+  background: #c6f6d5;
+  color: #22543d;
+  border: 2px solid #68d391;
+}
+
+/* Login Prompt */
+.login-prompt {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.login-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+.login-prompt h2 {
+  font-size: 24px;
+  color: #1a202c;
+  margin-bottom: 10px;
+}
+
+.login-prompt p {
+  color: #718096;
+  font-size: 14px;
+}
+
+/* Mode Section */
+.mode-section {
+  background: #f7fafc;
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 25px;
+}
+
+.section-label {
+  display: block;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.mode-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.mode-btn {
+  padding: 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.mode-btn:hover {
+  border-color: #cbd5e0;
+  transform: translateY(-2px);
+}
+
+.mode-btn.active {
+  border-color: #667eea;
+  background: #edf2f7;
+  color: #667eea;
+}
+
+.mode-icon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.mode-title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.mode-desc {
+  font-size: 12px;
+  color: #718096;
+}
+
+/* Input Section */
+.input-section {
+  margin-bottom: 25px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.textarea {
+  font-family: 'Courier New', monospace;
+  resize: vertical;
+}
+
+/* Result Details */
+.result-details {
+  margin-top: 10px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  font-size: 12px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .drive-permission-card {
+    padding: 25px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .mode-buttons {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
