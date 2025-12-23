@@ -16,10 +16,8 @@ const DrivePermission = () => {
   const [accessToken, setAccessToken] = useState(null);
 
   // Google OAuth configuration
-  //   const CLIENT_ID = '206828858290-scq79ta3j6nr405hh297thc9j221e70t.apps.googleusercontent.com';
-    const CLIENT_ID = '332507648218-irq993ppbl4c4mg3ikop2ql5kahajm2m.apps.googleusercontent.com';
-    const API_KEY = 'AIzaSyBeofeRDzSGFpQrtfqqiHORQ56Lutwf06I';
-    // const API_KEY = 'AIzaSyB_04opR0Rsi4hasfWJm1_c_SWNxezgsTA';
+    const CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
+    const API_KEY = process.env.REACT_APP_API_KEY;
   const SCOPES = 'https://www.googleapis.com/auth/drive';
 
   useEffect(() => {
