@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './DrivePermission.css';
+import LoginComponent from './LoginComponent';
+import MainInterfaceComponent from './MainInterfaceComponent';
 
 const DrivePermission = () => {
-  const [action, setAction] = useState('grant'); // 'grant' or 'revoke'
+  const [action, setAction] = useState('grant');
   const [mode, setMode] = useState('single');
   const [email, setEmail] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
@@ -15,14 +17,135 @@ const DrivePermission = () => {
   const [apiError, setApiError] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
 
-  // Google OAuth configuration
-    const CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
-    const API_KEY = process.env.REACT_APP_API_KEY;
+  const CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
+  const API_KEY = process.env.REACT_APP_API_KEY;
   const SCOPES = 'https://www.googleapis.com/auth/drive';
 
+  // Khôi phục session khi component mount
   useEffect(() => {
     loadGoogleAPI();
   }, []);
+
+  // Chờ API load xong rồi restore session
+  useEffect(() => {
+    if (apiLoaded && window.tokenClient) {
+      restoreSession();
+    }
+  }, [apiLoaded]);
+
+  // Lưu session mỗi khi có thay đổi
+  useEffect(() => {
+    if (accessToken && userInfo) {
+      saveSession();
+    }
+  }, [accessToken, userInfo]);
+
+  // Tự động làm mới token mỗi 45 phút
+  useEffect(() => {
+    if (!accessToken || !isLoggedIn) return;
+
+    const refreshInterval = setInterval(() => {
+      console.log('Tự động làm mới token...');
+      silentRefreshToken();
+    }, 45 * 60 * 1000); // 45 phút
+
+    return () => clearInterval(refreshInterval);
+  }, [accessToken, isLoggedIn]);
+
+  const saveSession = () => {
+    try {
+      const sessionData = {
+        accessToken,
+        userInfo,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('drivePermissionSession', JSON.stringify(sessionData));
+    } catch (error) {
+      console.error('Lỗi lưu session:', error);
+    }
+  };
+
+  const restoreSession = async () => {
+    try {
+      const savedSession = localStorage.getItem('drivePermissionSession');
+      if (!savedSession) {
+        console.log('Không có session được lưu');
+        return;
+      }
+
+      const sessionData = JSON.parse(savedSession);
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+      
+      // Kiểm tra session có hết hạn không (24 giờ)
+      if (Date.now() - sessionData.timestamp > oneDayInMs) {
+        console.log('Session đã hết hạn (> 24 giờ)');
+        clearSession();
+        return;
+      }
+      
+      // Set ngay lập tức từ localStorage để user không phải chờ
+      setAccessToken(sessionData.accessToken);
+      setUserInfo(sessionData.userInfo);
+      setIsLoggedIn(true);
+      
+      // Kiểm tra token có còn hiệu lực không (background)
+      const isValid = await verifyToken(sessionData.accessToken);
+      
+      if (!isValid) {
+        // Token không hợp lệ, thử làm mới
+        console.log('Token không hợp lệ, thử làm mới...');
+        silentRefreshToken();
+      } else {
+        console.log('Token hợp lệ, session khôi phục thành công');
+      }
+    } catch (error) {
+      console.error('Lỗi khôi phục session:', error);
+      clearSession();
+    }
+  };
+
+  const silentRefreshToken = async () => {
+    try {
+      // Đợi API load xong (tối đa 5 giây)
+      let attempts = 0;
+      while (!window.tokenClient && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+
+      if (!window.tokenClient) {
+        console.error('Không thể khởi tạo tokenClient');
+        clearSession();
+        return;
+      }
+
+      // Yêu cầu token mới (không hiện popup)
+      window.tokenClient.requestAccessToken({ prompt: '' });
+    } catch (error) {
+      console.error('Lỗi làm mới token:', error);
+      clearSession();
+    }
+  };
+
+  const verifyToken = async (token) => {
+    try {
+      const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const clearSession = () => {
+    localStorage.removeItem('drivePermissionSession');
+    setAccessToken(null);
+    setUserInfo(null);
+    setIsLoggedIn(false);
+  };
 
   const loadGoogleAPI = () => {
     const script1 = document.createElement('script');
@@ -61,10 +184,14 @@ const DrivePermission = () => {
       window.tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
+        prompt: '',
         callback: (response) => {
           if (response.access_token) {
             setAccessToken(response.access_token);
             getUserInfo(response.access_token);
+          } else if (response.error) {
+            console.error('Lỗi token:', response.error);
+            clearSession();
           }
         },
       });
@@ -98,6 +225,7 @@ const DrivePermission = () => {
       return;
     }
     try {
+      // Hiện popup đăng nhập cho lần đầu
       window.tokenClient.requestAccessToken({ prompt: 'consent' });
     } catch (error) {
       setResult({ type: 'error', message: `Lỗi đăng nhập: ${error.message}` });
@@ -107,11 +235,11 @@ const DrivePermission = () => {
   const handleLogout = () => {
     if (accessToken) {
       window.google.accounts.oauth2.revoke(accessToken, () => {
-        setIsLoggedIn(false);
-        setUserInfo(null);
-        setAccessToken(null);
+        clearSession();
         setResult(null);
       });
+    } else {
+      clearSession();
     }
   };
 
@@ -140,6 +268,13 @@ const DrivePermission = () => {
 
       if (!response.ok) {
         const error = await response.json();
+        
+        // Nếu token hết hạn, xóa session và yêu cầu đăng nhập lại
+        if (response.status === 401) {
+          clearSession();
+          throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        }
+        
         throw new Error(error.error?.message || 'Lỗi không xác định');
       }
 
@@ -162,6 +297,12 @@ const DrivePermission = () => {
 
       if (!listResponse.ok) {
         const error = await listResponse.json();
+        
+        if (listResponse.status === 401) {
+          clearSession();
+          throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        }
+        
         throw new Error(error.error?.message || 'Không thể lấy danh sách quyền');
       }
 
@@ -227,223 +368,75 @@ const DrivePermission = () => {
       const result = await processFunction(videoId, email);
 
       if (result.success) {
-        setResult({
-          type: 'success',
-          message: `✓ Đã ${actionText} thành công cho ${email}!`,
-          details: `Video ID: ${videoId}`,
-        });
+        setResult({ type: 'success', message: `Đã ${actionText} quyền truy cập video thành công!` });
       } else {
-        setResult({
-          type: 'error',
-          message: `✗ Lỗi khi ${actionText}: ${result.error}`,
-          details: `Video ID: ${videoId}`,
-        });
+        setResult({ type: 'error', message: `Lỗi: ${result.error}` });
       }
+
+      setLoading(false);
     } else {
-      if (!videoUrls.trim()) {
-        setResult({ type: 'error', message: 'Vui lòng nhập danh sách URL/ID video!' });
-        setLoading(false);
-        return;
-      }
-
-      const urls = videoUrls.split('\n').map((u) => u.trim()).filter((u) => u);
-      const videoIds = urls.map(extractVideoId);
-
+      // Chế độ hàng loạt
+      const videoIds = videoUrls.split('\n').map(extractVideoId).filter(Boolean);
       let successCount = 0;
-      let failedCount = 0;
-      const details = [];
+      let errorCount = 0;
+      let errorMessage = '';
 
-      for (let i = 0; i < videoIds.length; i++) {
-        const result = await processFunction(videoIds[i], email);
-
+      for (const videoId of videoIds) {
+        const result = await processFunction(videoId, email);
         if (result.success) {
           successCount++;
-          details.push(`✓ Video ${i + 1}/${videoIds.length}: ${videoIds[i]}`);
         } else {
-          failedCount++;
-          details.push(`✗ Video ${i + 1}/${videoIds.length}: ${videoIds[i]} - ${result.error}`);
+          errorCount++;
+          errorMessage = result.error;
         }
-
-        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
-      setResult({
-        type: successCount > 0 ? 'success' : 'error',
-        message: `Hoàn thành! Thành công: ${successCount}/${videoIds.length}, Thất bại: ${failedCount}/${videoIds.length}`,
-        details: details.join('\n'),
-      });
-    }
+      if (successCount > 0) {
+        setResult({ type: 'success', message: `Đã ${actionText} quyền truy cập cho ${successCount} video thành công!` });
+      }
 
-    setLoading(false);
+      if (errorCount > 0) {
+        setResult({ type: 'error', message: `Đã xảy ra lỗi với ${errorCount} video: ${errorMessage}` });
+      }
+
+      setLoading(false);
+    }
   };
 
   return (
     <div className="drive-permission-container">
-      <div className="drive-permission-card">
-        <div className="header">
-          <div className="header-left">
-            <div className="icon-box">
-              <span>🔗</span>
-            </div>
-            <div>
-              <h1>Video Permission Manager</h1>
-              <p className="subtitle">Cấp quyền video Google Drive cho học viên</p>
-            </div>
-          </div>
+      {!isLoggedIn ? (
+        <LoginComponent 
+          onLogin={handleLogin}
+          apiLoaded={apiLoaded}
+          userInfo={userInfo}
+          isLoggedIn={isLoggedIn}
+        />
+      ) : (
+        <MainInterfaceComponent
+          action={action}
+          setAction={setAction}
+          mode={mode}
+          setMode={setMode}
+          email={email}
+          setEmail={setEmail}
+          videoUrl={videoUrl}
+          setVideoUrl={setVideoUrl}
+          videoUrls={videoUrls}
+          setVideoUrls={setVideoUrls}
+          onShare={handleSharePermission}
+          loading={loading}
+          result={result}
+          userInfo={userInfo}
+          onLogout={handleLogout}
+        />
+      )}
 
-          <div className="header-right">
-            {isLoggedIn ? (
-              <div className="user-info">
-                <div className="user-details">
-                  <div className="user-name">{userInfo?.name}</div>
-                  <div className="user-email">{userInfo?.email}</div>
-                </div>
-                {userInfo?.imageUrl && (
-                  <img src={userInfo.imageUrl} alt="Profile" className="user-avatar" />
-                )}
-                <button onClick={handleLogout} className="btn btn-logout">
-                  Đăng xuất
-                </button>
-              </div>
-            ) : (
-              <button onClick={handleLogin} disabled={!apiLoaded} className="btn btn-login">
-                {apiLoaded ? 'Đăng nhập Google' : 'Đang tải...'}
-              </button>
-            )}
-          </div>
+      {apiError && (
+        <div className="api-error">
+          {apiError}
         </div>
-
-        {apiError && (
-          <div className="alert alert-error">
-            <strong>⚠️ Lỗi cấu hình</strong>
-            <p>{apiError}</p>
-          </div>
-        )}
-
-        {!isLoggedIn ? (
-          <div className="login-prompt">
-            <div className="login-icon">🔐</div>
-            <h2>Vui lòng đăng nhập</h2>
-            <p>Đăng nhập bằng tài khoản Google chủ sở hữu video để bắt đầu</p>
-          </div>
-        ) : (
-          <>
-            {/* Action Selection - CẤP QUYỀN / GỠ QUYỀN */}
-            <div className="mode-section">
-              <label className="section-label">Hành động</label>
-              <div className="mode-buttons">
-                <button
-                  onClick={() => setAction('grant')}
-                  className={`mode-btn ${action === 'grant' ? 'active' : ''}`}
-                >
-                  <span className="mode-icon">✅</span>
-                  <div className="mode-title">Cấp quyền</div>
-                  <div className="mode-desc">Cho phép truy cập video</div>
-                </button>
-
-                <button
-                  onClick={() => setAction('revoke')}
-                  className={`mode-btn ${action === 'revoke' ? 'active' : ''}`}
-                >
-                  <span className="mode-icon">🚫</span>
-                  <div className="mode-title">Gỡ quyền</div>
-                  <div className="mode-desc">Thu hồi quyền truy cập</div>
-                </button>
-              </div>
-            </div>
-
-            {/* Mode Selection - 1 VIDEO / NHIỀU VIDEO */}
-            <div className="mode-section">
-              <label className="section-label">
-                Chế độ {action === 'grant' ? 'cấp quyền' : 'gỡ quyền'}
-              </label>
-              <div className="mode-buttons">
-                <button
-                  onClick={() => setMode('single')}
-                  className={`mode-btn ${mode === 'single' ? 'active' : ''}`}
-                >
-                  <span className="mode-icon">🎬</span>
-                  <div className="mode-title">1 Video</div>
-                  <div className="mode-desc">
-                    {action === 'grant' ? 'Cấp quyền cho 1 video' : 'Gỡ quyền cho 1 video'}
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setMode('multiple')}
-                  className={`mode-btn ${mode === 'multiple' ? 'active' : ''}`}
-                >
-                  <span className="mode-icon">📚</span>
-                  <div className="mode-title">Nhiều Video</div>
-                  <div className="mode-desc">
-                    {action === 'grant' ? 'Cấp quyền cho nhiều video' : 'Gỡ quyền cho nhiều video'}
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Email Input */}
-            <div className="input-section">
-              <label className="section-label">📧 Email người nhận</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="example@gmail.com"
-                className="input-field"
-              />
-            </div>
-
-            {/* Video Input */}
-            {mode === 'single' ? (
-              <div className="input-section">
-                <label className="section-label">🔑 Video ID hoặc URL</label>
-                <input
-                  type="text"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://drive.google.com/file/d/..."
-                  className="input-field"
-                />
-              </div>
-            ) : (
-              <div className="input-section">
-                <label className="section-label">
-                  🔑 Danh sách Video URLs/IDs (mỗi video một dòng)
-                </label>
-                <textarea
-                  value={videoUrls}
-                  onChange={(e) => setVideoUrls(e.target.value)}
-                  placeholder="https://drive.google.com/file/d/...&#10;https://drive.google.com/file/d/..."
-                  rows={6}
-                  className="input-field textarea"
-                />
-              </div>
-            )}
-
-            {/* Action Button */}
-            <button
-              onClick={handleSharePermission}
-              disabled={loading}
-              className="btn btn-primary"
-            >
-              {loading ? '⏳ Đang xử lý...' : action === 'grant' ? '🚀 Cấp quyền' : '🗑️ Gỡ quyền'}
-            </button>
-
-            {/* Result */}
-            {result && (
-              <div
-                className={`alert ${
-                  result.type === 'success' ? 'alert-success' : 'alert-error'
-                }`}
-              >
-                <strong>{result.message}</strong>
-                {result.details && <pre className="result-details">{result.details}</pre>}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      )}
     </div>
   );
 };
