@@ -345,9 +345,9 @@ const DrivePermission = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (mode === 'multi-user') {
-      // Chế độ nhiều người
-      const emailList = emails.split('\n').map(e => e.trim()).filter(Boolean);
-      const videoIds = videoUrls.split('\n').map(extractVideoId).filter(Boolean);
+      // Chế độ nhiều người - lọc trùng lặp
+      const emailList = [...new Set(emails.split('\n').map(e => e.trim()).filter(Boolean))];
+      const videoIds = [...new Set(videoUrls.split('\n').map(extractVideoId).filter(Boolean))];
 
       if (emailList.length === 0) {
         setResult({ type: 'error', message: 'Vui lòng nhập danh sách email!' });
@@ -440,8 +440,8 @@ const DrivePermission = () => {
 
       setLoading(false);
     } else {
-      // Chế độ hàng loạt
-      const videoIds = videoUrls.split('\n').map(extractVideoId).filter(Boolean);
+      // Chế độ hàng loạt - lọc trùng lặp
+      const videoIds = [...new Set(videoUrls.split('\n').map(extractVideoId).filter(Boolean))];
       let successCount = 0;
       let errorCount = 0;
       let errorMessage = '';

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 
 const MainInterfaceComponent = ({
   action,
@@ -20,6 +20,19 @@ const MainInterfaceComponent = ({
   onLogout,
 }) => {
   const resultRef = useRef(null);
+
+  const extractVideoId = (url) => {
+    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : url.trim();
+  };
+
+  const uniqueEmailCount = useMemo(() => {
+    return new Set(emails.split('\n').map(e => e.trim()).filter(Boolean)).size;
+  }, [emails]);
+
+  const uniqueVideoCount = useMemo(() => {
+    return new Set(videoUrls.split('\n').map(extractVideoId).filter(Boolean)).size;
+  }, [videoUrls]);
 
   // Tự động scroll đến khi message xuất hiện
   useEffect(() => {
@@ -112,7 +125,10 @@ const MainInterfaceComponent = ({
         {mode === 'multi-user' ? (
           <>
             <div className="form-group">
-              <label>Danh sách email (mỗi email một dòng):</label>
+              <label>
+                Danh sách email (mỗi email một dòng):
+                {uniqueEmailCount > 0 && <span className="count-badge">{uniqueEmailCount} người</span>}
+              </label>
               <textarea
                 value={emails}
                 onChange={(e) => setEmails(e.target.value)}
@@ -120,7 +136,10 @@ const MainInterfaceComponent = ({
               />
             </div>
             <div className="form-group">
-              <label>Danh sách URL hoặc ID video (mỗi cái một dòng):</label>
+              <label>
+                Danh sách URL hoặc ID video (mỗi cái một dòng):
+                {uniqueVideoCount > 0 && <span className="count-badge">{uniqueVideoCount} video</span>}
+              </label>
               <textarea
                 value={videoUrls}
                 onChange={(e) => setVideoUrls(e.target.value)}
@@ -141,7 +160,12 @@ const MainInterfaceComponent = ({
             </div>
             <div className="form-group">
               <label>
-                {mode === 'single' ? 'URL hoặc ID video:' : 'Danh sách URL hoặc ID video (mỗi cái một dòng):'}
+                {mode === 'single' ? 'URL hoặc ID video:' : (
+                  <>
+                    Danh sách URL hoặc ID video (mỗi cái một dòng):
+                    {uniqueVideoCount > 0 && <span className="count-badge">{uniqueVideoCount} video</span>}
+                  </>
+                )}
               </label>
               {mode === 'single' ? (
                 <input
