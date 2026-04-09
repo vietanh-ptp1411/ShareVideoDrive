@@ -226,9 +226,7 @@ const DrivePermission = () => {
       return;
     }
     try {
-      // Dùng prompt rỗng để tránh bắt xác minh lại mỗi lần
-      // Chỉ hiện chọn tài khoản, không bắt consent lại nếu đã cấp quyền trước đó
-      window.tokenClient.requestAccessToken({ prompt: '' });
+      window.tokenClient.requestAccessToken({ prompt: 'consent' });
     } catch (error) {
       setResult({ type: 'error', message: `Lỗi đăng nhập: ${error.message}` });
     }
