@@ -344,6 +344,32 @@ const DrivePermission = () => {
     setPermissionsLoading(false);
   };
 
+  // ===== Scan emails from video =====
+  const handleScanEmails = async (videoUrlOrId) => {
+    if (!videoUrlOrId.trim()) return;
+    setPermissionsLoading(true);
+    try {
+      const fileId = extractVideoId(videoUrlOrId);
+      const perms = await getPermissions(fileId);
+      const scannedEmails = (perms.permissions || [])
+        .filter(p => p.type === 'user' && p.emailAddress)
+        .map(p => p.emailAddress);
+      if (scannedEmails.length === 0) {
+        setResult({ type: 'warning', message: 'Không tìm thấy email nào có quyền trên video này.' });
+      } else {
+        setEmails(prev => {
+          const existing = prev.split('\n').map(e => e.trim()).filter(Boolean);
+          const merged = [...new Set([...existing, ...scannedEmails])];
+          return merged.join('\n');
+        });
+        setResult({ type: 'success', message: `Đã thêm ${scannedEmails.length} email từ video vào danh sách.` });
+      }
+    } catch (error) {
+      setResult({ type: 'error', message: `Lỗi quét email: ${error.message}` });
+    }
+    setPermissionsLoading(false);
+  };
+
   // ===== Load folder =====
   const handleLoadFolder = async () => {
     if (!folderUrl.trim()) return;
@@ -564,6 +590,7 @@ const DrivePermission = () => {
           viewPermissions={viewPermissions}
           permissionsLoading={permissionsLoading}
           onClosePermissions={() => setViewPermissions(null)}
+          onScanEmails={handleScanEmails}
           darkMode={darkMode}
           onToggleDarkMode={() => setDarkMode(!darkMode)}
           accessToken={accessToken}

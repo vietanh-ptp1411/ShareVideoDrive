@@ -469,6 +469,26 @@
 
 .btn-pill:hover { background: var(--border-color) !important; }
 
+/* ============ SCAN SECTION ============ */
+.scan-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.scan-section label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.scan-section .input-with-button input {
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
 /* ============ VERIFY ============ */
 .verify-section {
   margin-top: 10px;

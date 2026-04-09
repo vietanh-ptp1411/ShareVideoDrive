@@ -10,12 +10,14 @@ const MainInterfaceComponent = ({
   userInfo, onLogout,
   savedGroups, onSaveGroup, onLoadGroup, onDeleteGroup,
   onViewPermissions, viewPermissions, permissionsLoading, onClosePermissions,
+  onScanEmails,
   darkMode, onToggleDarkMode,
   accessToken, extractVideoId, verifyFile,
 }) => {
   const resultRef = useRef(null);
   const [verifiedFiles, setVerifiedFiles] = useState({});
   const [verifying, setVerifying] = useState(false);
+  const [scanVideoUrl, setScanVideoUrl] = useState('');
 
   useEffect(() => {
     if (result && resultRef.current) {
@@ -191,6 +193,21 @@ const MainInterfaceComponent = ({
                   <button className="btn btn-tiny btn-delete" onClick={() => onDeleteGroup(i)}>✕</button>
                 </span>
               ))}
+            </div>
+            {/* Scan emails from video */}
+            <div className="scan-section">
+              <label>Quét email từ video:</label>
+              <div className="input-with-button">
+                <input
+                  type="text"
+                  value={scanVideoUrl}
+                  onChange={(e) => setScanVideoUrl(e.target.value)}
+                  placeholder="Dán URL hoặc ID video để quét email"
+                />
+                <button className="btn btn-verify" onClick={() => onScanEmails(scanVideoUrl)} disabled={permissionsLoading || !scanVideoUrl.trim()}>
+                  {permissionsLoading ? '...' : '🔍 Quét'}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
