@@ -7,6 +7,7 @@ const DrivePermission = () => {
   const [action, setAction] = useState('grant');
   const [mode, setMode] = useState('single');
   const [email, setEmail] = useState('');
+  const [emails, setEmails] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [videoUrls, setVideoUrls] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -225,8 +226,9 @@ const DrivePermission = () => {
       return;
     }
     try {
-      // Hiện popup đăng nhập cho lần đầu
-      window.tokenClient.requestAccessToken({ prompt: 'consent' });
+      // Dùng prompt rỗng để tránh bắt xác minh lại mỗi lần
+      // Chỉ hiện chọn tài khoản, không bắt consent lại nếu đã cấp quyền trước đó
+      window.tokenClient.requestAccessToken({ prompt: '' });
     } catch (error) {
       setResult({ type: 'error', message: `Lỗi đăng nhập: ${error.message}` });
     }
@@ -340,12 +342,70 @@ const DrivePermission = () => {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (mode === 'multi-user') {
+      // Chế độ nhiều người
+      const emailList = emails.split('\n').map(e => e.trim()).filter(Boolean);
+      const videoIds = videoUrls.split('\n').map(extractVideoId).filter(Boolean);
+
+      if (emailList.length === 0) {
+        setResult({ type: 'error', message: 'Vui lòng nhập danh sách email!' });
+        return;
+      }
+
+      const invalidEmails = emailList.filter(e => !emailRegex.test(e));
+      if (invalidEmails.length > 0) {
+        setResult({ type: 'error', message: `Email không hợp lệ: ${invalidEmails.join(', ')}` });
+        return;
+      }
+
+      if (videoIds.length === 0) {
+        setResult({ type: 'error', message: 'Vui lòng nhập danh sách video!' });
+        return;
+      }
+
+      setLoading(true);
+      setResult(null);
+
+      const processFunction = action === 'grant' ? shareVideo : revokeVideo;
+      const actionText = action === 'grant' ? 'cấp quyền' : 'gỡ quyền';
+      let successCount = 0;
+      let errorCount = 0;
+      let errorMessages = [];
+
+      for (const targetEmail of emailList) {
+        for (const videoId of videoIds) {
+          const result = await processFunction(videoId, targetEmail);
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+            errorMessages.push(`${targetEmail} - video ${videoId}: ${result.error}`);
+          }
+        }
+      }
+
+      const total = emailList.length * videoIds.length;
+      let message = '';
+      if (successCount > 0) {
+        message += `Đã ${actionText} thành công ${successCount}/${total} (${emailList.length} người × ${videoIds.length} video).`;
+      }
+      if (errorCount > 0) {
+        message += ` Lỗi ${errorCount}: ${errorMessages.slice(0, 3).join('; ')}`;
+        if (errorMessages.length > 3) message += `... và ${errorMessages.length - 3} lỗi khác`;
+      }
+
+      setResult({ type: errorCount > 0 ? (successCount > 0 ? 'warning' : 'error') : 'success', message });
+      setLoading(false);
+      return;
+    }
+
     if (!email.trim()) {
       setResult({ type: 'error', message: 'Vui lòng nhập email người nhận!' });
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setResult({ type: 'error', message: 'Email không hợp lệ!' });
       return;
@@ -420,6 +480,8 @@ const DrivePermission = () => {
           setMode={setMode}
           email={email}
           setEmail={setEmail}
+          emails={emails}
+          setEmails={setEmails}
           videoUrl={videoUrl}
           setVideoUrl={setVideoUrl}
           videoUrls={videoUrls}

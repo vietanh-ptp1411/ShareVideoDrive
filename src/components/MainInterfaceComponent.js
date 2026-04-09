@@ -7,6 +7,8 @@ const MainInterfaceComponent = ({
   setMode,
   email,
   setEmail,
+  emails,
+  setEmails,
   videoUrl,
   setVideoUrl,
   videoUrls,
@@ -97,38 +99,67 @@ const MainInterfaceComponent = ({
             >
               📋 Hàng loạt
             </button>
+            <button
+              type="button"
+              className={`btn-option ${mode === 'multi-user' ? 'active' : ''}`}
+              onClick={() => setMode('multi-user')}
+            >
+              👥 Nhiều người
+            </button>
           </div>
         </div>
 
-        <div className="form-group">
-          <label>Email người nhận:</label>
-          <input
-            type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Nhập email người nhận"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>
-            {mode === 'single' ? 'URL hoặc ID video:' : 'Danh sách URL hoặc ID video (mỗi cái một dòng):'}
-          </label>
-          {mode === 'single' ? (
-            <input
-              type="text"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="Nhập URL hoặc ID video"
-            />
-          ) : (
-            <textarea
-              value={videoUrls}
-              onChange={(e) => setVideoUrls(e.target.value)}
-              placeholder="Nhập danh sách URL hoặc ID video"
-            />
-          )}
-        </div>
+        {mode === 'multi-user' ? (
+          <>
+            <div className="form-group">
+              <label>Danh sách email (mỗi email một dòng):</label>
+              <textarea
+                value={emails}
+                onChange={(e) => setEmails(e.target.value)}
+                placeholder={"user1@gmail.com\nuser2@gmail.com\nuser3@gmail.com"}
+              />
+            </div>
+            <div className="form-group">
+              <label>Danh sách URL hoặc ID video (mỗi cái một dòng):</label>
+              <textarea
+                value={videoUrls}
+                onChange={(e) => setVideoUrls(e.target.value)}
+                placeholder="Nhập danh sách URL hoặc ID video"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="form-group">
+              <label>Email người nhận:</label>
+              <input
+                type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Nhập email người nhận"
+              />
+            </div>
+            <div className="form-group">
+              <label>
+                {mode === 'single' ? 'URL hoặc ID video:' : 'Danh sách URL hoặc ID video (mỗi cái một dòng):'}
+              </label>
+              {mode === 'single' ? (
+                <input
+                  type="text"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="Nhập URL hoặc ID video"
+                />
+              ) : (
+                <textarea
+                  value={videoUrls}
+                  onChange={(e) => setVideoUrls(e.target.value)}
+                  placeholder="Nhập danh sách URL hoặc ID video"
+                />
+              )}
+            </div>
+          </>
+        )}
 
         <div className="form-actions">
           <button 

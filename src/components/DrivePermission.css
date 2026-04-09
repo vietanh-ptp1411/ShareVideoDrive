@@ -267,7 +267,7 @@
 
 .btn-option {
   flex: 1;
-  min-width: 200px;
+  min-width: 150px;
   padding: 12px 20px;
   border: 2px solid #e2e8f0;
   border-radius: 10px;
@@ -410,6 +410,12 @@
   background: #fed7d7;
   color: #c53030;
   border-left-color: #c53030;
+}
+
+.result-message.warning {
+  background: #fefcbf;
+  color: #744210;
+  border-left-color: #d69e2e;
 }
 
 .api-error {
