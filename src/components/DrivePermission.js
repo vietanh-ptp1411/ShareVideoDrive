@@ -312,7 +312,7 @@ const DrivePermission = () => {
       const permission = data.permissions?.find(p => p.emailAddress === targetEmail);
 
       if (!permission) {
-        throw new Error('Không tìm thấy quyền cho email này');
+        return { success: true, videoId, skipped: true };
       }
 
       const deleteResponse = await fetch(
@@ -371,6 +371,7 @@ const DrivePermission = () => {
       const processFunction = action === 'grant' ? shareVideo : revokeVideo;
       const actionText = action === 'grant' ? 'cấp quyền' : 'gỡ quyền';
       let successCount = 0;
+      let skippedCount = 0;
       let errorCount = 0;
       let errorMessages = [];
 
@@ -378,7 +379,11 @@ const DrivePermission = () => {
         for (const videoId of videoIds) {
           const result = await processFunction(videoId, targetEmail);
           if (result.success) {
-            successCount++;
+            if (result.skipped) {
+              skippedCount++;
+            } else {
+              successCount++;
+            }
           } else {
             errorCount++;
             errorMessages.push(`${targetEmail} - video ${videoId}: ${result.error}`);
@@ -387,9 +392,9 @@ const DrivePermission = () => {
       }
 
       const total = emailList.length * videoIds.length;
-      let message = '';
-      if (successCount > 0) {
-        message += `Đã ${actionText} thành công ${successCount}/${total} (${emailList.length} người × ${videoIds.length} video).`;
+      let message = `Đã ${actionText} thành công ${successCount}/${total} (${emailList.length} người × ${videoIds.length} video).`;
+      if (skippedCount > 0) {
+        message += ` Bỏ qua ${skippedCount} (không có quyền để gỡ).`;
       }
       if (errorCount > 0) {
         message += ` Lỗi ${errorCount}: ${errorMessages.slice(0, 3).join('; ')}`;
