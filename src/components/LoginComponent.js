@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LoginComponent = ({ onLogin, apiLoaded, userInfo, isLoggedIn }) => {
+const LoginComponent = ({ onLogin, apiLoaded, userInfo, isLoggedIn, darkMode, onToggleDarkMode }) => {
   return (
     <div className="drive-permission-card">
       <div className="header">
@@ -12,8 +12,11 @@ const LoginComponent = ({ onLogin, apiLoaded, userInfo, isLoggedIn }) => {
           </div>
         </div>
 
-        {isLoggedIn && userInfo && (
-          <div className="login-section">
+        <div className="login-section">
+          <button className="btn btn-dark-toggle" onClick={onToggleDarkMode} title={darkMode ? 'Chế độ sáng' : 'Chế độ tối'}>
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+          {isLoggedIn && userInfo && (
             <div className="user-info">
               <img src={userInfo?.imageUrl} alt={userInfo?.name} className="user-avatar" />
               <div className="user-details">
@@ -21,8 +24,8 @@ const LoginComponent = ({ onLogin, apiLoaded, userInfo, isLoggedIn }) => {
                 <div className="user-email">{userInfo?.email}</div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {!isLoggedIn && (
@@ -31,8 +34,8 @@ const LoginComponent = ({ onLogin, apiLoaded, userInfo, isLoggedIn }) => {
             <div className="login-icon">🔐</div>
             <h2>Bước 1: Đăng nhập với Google</h2>
             <p>Để sử dụng công cụ này, bạn cần đăng nhập với tài khoản Google của mình.</p>
-            <button 
-              className="btn btn-login" 
+            <button
+              className="btn btn-login"
               onClick={onLogin}
               disabled={!apiLoaded}
             >
@@ -46,4 +49,3 @@ const LoginComponent = ({ onLogin, apiLoaded, userInfo, isLoggedIn }) => {
 };
 
 export default LoginComponent;
-//cắp cái dcm
