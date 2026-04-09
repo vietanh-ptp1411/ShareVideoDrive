@@ -519,6 +519,24 @@
   margin-top: 10px;
 }
 
+.folder-files-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-scan {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)) !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+}
+
+.btn-scan:hover:not(:disabled) { opacity: 0.9; }
+.btn-scan:disabled { opacity: 0.6; }
+
 .folder-files-scroll {
   max-height: 250px;
   overflow-y: auto;

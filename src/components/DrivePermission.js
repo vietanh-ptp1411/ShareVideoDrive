@@ -344,30 +344,45 @@ const DrivePermission = () => {
     setPermissionsLoading(false);
   };
 
-  // ===== Scan emails from video =====
-  const handleScanEmails = async (videoUrlOrId) => {
-    if (!videoUrlOrId.trim()) return;
+  // ===== Scan emails from folder files =====
+  const handleScanEmails = async () => {
+    if (folderFiles.length === 0) {
+      setResult({ type: 'error', message: 'Vui lòng tải folder trước!' });
+      return;
+    }
     setPermissionsLoading(true);
-    try {
-      const fileId = extractVideoId(videoUrlOrId);
-      const perms = await getPermissions(fileId);
-      const scannedEmails = (perms.permissions || [])
-        .filter(p => p.type === 'user' && p.emailAddress)
-        .map(p => p.emailAddress);
-      if (scannedEmails.length === 0) {
-        setResult({ type: 'warning', message: 'Không tìm thấy email nào có quyền trên video này.' });
-      } else {
-        setEmails(prev => {
-          const existing = prev.split('\n').map(e => e.trim()).filter(Boolean);
-          const merged = [...new Set([...existing, ...scannedEmails])];
-          return merged.join('\n');
-        });
-        setResult({ type: 'success', message: `Đã thêm ${scannedEmails.length} email từ video vào danh sách.` });
+    setProgress({ current: 0, total: folderFiles.length, successCount: 0, errorCount: 0, skippedCount: 0 });
+    const allEmails = new Set();
+    let scanned = 0;
+    let errors = 0;
+
+    const tasks = folderFiles.map(file => async () => {
+      try {
+        const perms = await getPermissions(file.id);
+        (perms.permissions || [])
+          .filter(p => p.type === 'user' && p.emailAddress)
+          .forEach(p => allEmails.add(p.emailAddress));
+        scanned++;
+      } catch {
+        errors++;
       }
-    } catch (error) {
-      setResult({ type: 'error', message: `Lỗi quét email: ${error.message}` });
+      setProgress(prev => ({ ...prev, current: prev.current + 1, successCount: scanned, errorCount: errors }));
+    });
+
+    await runWithConcurrency(tasks, 5, null, null);
+
+    if (allEmails.size > 0) {
+      setEmails(prev => {
+        const existing = prev.split('\n').map(e => e.trim()).filter(Boolean);
+        const merged = [...new Set([...existing, ...allEmails])];
+        return merged.join('\n');
+      });
+      setResult({ type: 'success', message: `Đã quét ${folderFiles.length} file, tìm thấy ${allEmails.size} email.` });
+    } else {
+      setResult({ type: 'warning', message: 'Không tìm thấy email nào.' });
     }
     setPermissionsLoading(false);
+    setProgress({ current: 0, total: 0, successCount: 0, errorCount: 0, skippedCount: 0 });
   };
 
   // ===== Load folder =====

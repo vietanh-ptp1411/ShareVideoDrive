@@ -17,7 +17,6 @@ const MainInterfaceComponent = ({
   const resultRef = useRef(null);
   const [verifiedFiles, setVerifiedFiles] = useState({});
   const [verifying, setVerifying] = useState(false);
-  const [scanVideoUrl, setScanVideoUrl] = useState('');
 
   useEffect(() => {
     if (result && resultRef.current) {
@@ -194,21 +193,6 @@ const MainInterfaceComponent = ({
                 </span>
               ))}
             </div>
-            {/* Scan emails from video */}
-            <div className="scan-section">
-              <label>Quét email từ video:</label>
-              <div className="input-with-button">
-                <input
-                  type="text"
-                  value={scanVideoUrl}
-                  onChange={(e) => setScanVideoUrl(e.target.value)}
-                  placeholder="Dán URL hoặc ID video để quét email"
-                />
-                <button className="btn btn-verify" onClick={() => onScanEmails(scanVideoUrl)} disabled={permissionsLoading || !scanVideoUrl.trim()}>
-                  {permissionsLoading ? '...' : '🔍 Quét'}
-                </button>
-              </div>
-            </div>
           </div>
         ) : (
           <div className="form-group">
@@ -239,7 +223,12 @@ const MainInterfaceComponent = ({
             </div>
             {folderFiles.length > 0 && (
               <div className="folder-files-list">
-                <span className="count-badge">{folderFiles.length} file</span>
+                <div className="folder-files-header">
+                  <span className="count-badge">{folderFiles.length} file</span>
+                  <button className="btn btn-small btn-scan" onClick={onScanEmails} disabled={permissionsLoading}>
+                    {permissionsLoading ? '⏳ Đang quét...' : '🔍 Quét email từ folder'}
+                  </button>
+                </div>
                 <div className="folder-files-scroll">
                   {folderFiles.map((f, i) => (
                     <div key={i} className="folder-file-item">
