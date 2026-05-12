@@ -27,6 +27,11 @@ const DrivePermission = () => {
   });
   const [viewPermissions, setViewPermissions] = useState(null);
   const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [sendNotification, setSendNotification] = useState(() => localStorage.getItem('sendNotification') === 'true');
+
+  useEffect(() => {
+    localStorage.setItem('sendNotification', sendNotification);
+  }, [sendNotification]);
 
   const abortControllerRef = useRef(null);
 
@@ -243,7 +248,7 @@ const DrivePermission = () => {
   const shareVideo = async (videoId, targetEmail) => {
     try {
       const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${videoId}/permissions?sendNotificationEmail=true`,
+        `https://www.googleapis.com/drive/v3/files/${videoId}/permissions?sendNotificationEmail=${sendNotification}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -611,6 +616,8 @@ const DrivePermission = () => {
           accessToken={accessToken}
           extractVideoId={extractVideoId}
           verifyFile={verifyFile}
+          sendNotification={sendNotification}
+          setSendNotification={setSendNotification}
         />
       )}
       {apiError && <div className="api-error">{apiError}</div>}

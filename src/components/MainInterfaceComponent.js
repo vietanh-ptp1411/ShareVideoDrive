@@ -13,6 +13,7 @@ const MainInterfaceComponent = ({
   onScanEmails,
   darkMode, onToggleDarkMode,
   accessToken, extractVideoId, verifyFile,
+  sendNotification, setSendNotification,
 }) => {
   const resultRef = useRef(null);
   const [verifiedFiles, setVerifiedFiles] = useState({});
@@ -145,6 +146,25 @@ const MainInterfaceComponent = ({
             </button>
           </div>
         </div>
+
+        {/* Tùy chọn gửi email thông báo */}
+        {action === 'grant' && (
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={sendNotification}
+                onChange={(e) => setSendNotification(e.target.checked)}
+              />
+              <span>📧 Gửi email thông báo cho người nhận</span>
+            </label>
+            <p className="checkbox-hint">
+              {sendNotification
+                ? '⚠️ Google giới hạn ~200–600 email/ngày. Nếu chia sẻ nhiều, hãy tắt tùy chọn này để tránh lỗi "Rate limit exceeded".'
+                : '✓ An toàn — không bị giới hạn rate. Người nhận vẫn truy cập được video qua link đã chia sẻ.'}
+            </p>
+          </div>
+        )}
 
         {/* Chế độ */}
         <div className="form-group">

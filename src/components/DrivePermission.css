@@ -763,3 +763,30 @@
   .footer { padding: 20px 16px; }
   .btn-option { min-width: 100px; padding: 10px 12px; font-size: 12px; }
 }
+
+/* ============ CHECKBOX ============ */
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--gradient-start);
+  flex-shrink: 0;
+}
+
+.checkbox-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding-left: 30px;
+}
