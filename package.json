@@ -1,6 +1,6 @@
 {
   "name": "tool-video",
-  "homepage": "https://vietanh-ptp1411.github.io/ShareVideoDrive",
+  "homepage": ".",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
