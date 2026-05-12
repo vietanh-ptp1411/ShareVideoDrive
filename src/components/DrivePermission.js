@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './DrivePermission.css';
 import LoginComponent from './LoginComponent';
 import MainInterfaceComponent from './MainInterfaceComponent';
@@ -47,18 +47,21 @@ const DrivePermission = () => {
   // Khôi phục session khi component mount
   useEffect(() => {
     loadGoogleAPI();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (apiLoaded && window.tokenClient) {
       restoreSession();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiLoaded]);
 
   useEffect(() => {
     if (accessToken && userInfo) {
       saveSession();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, userInfo]);
 
   useEffect(() => {
@@ -67,6 +70,7 @@ const DrivePermission = () => {
       silentRefreshToken();
     }, 45 * 60 * 1000);
     return () => clearInterval(refreshInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, isLoggedIn]);
 
   const saveSession = () => {
